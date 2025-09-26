@@ -22,11 +22,17 @@ app.use(express.json())
 const PORT = 3001
 app.get('/', (req, res) => {
   console.log(req.query)
+  const list_idx = req.query.list_idx
+  const todo_idx = req.query.todo_idx
   switch (req.query.type) {
     case 'get':
       res.send(todos)
       break
-    case 'set':
+    case 'set_text':
+      todos[list_idx].todos[todo_idx] = req.query.text
+      console.log(`updated todos[${list_idx}][${todo_idx}] to ${todos[list_idx].todos[todo_idx]}`)
+      break
+
     default:
       console.log(`ERROR: Unsupported request type: ${req.params.type}`)
   }

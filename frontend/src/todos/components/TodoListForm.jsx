@@ -29,6 +29,15 @@ export const TodoListForm = ({ todoList, saveTodoList }) => {
                 label='What to do?'
                 value={name}
                 onChange={(event) => {
+                  fetch(
+                    'http://localhost:3001?' +
+                      new URLSearchParams({
+                        type: 'set_text',
+                        list_idx: todoList.id,
+                        todo_idx: index,
+                        text: event.target.value,
+                      })
+                  )
                   setTodos([
                     // immutable update
                     ...todos.slice(0, index),
@@ -62,9 +71,6 @@ export const TodoListForm = ({ todoList, saveTodoList }) => {
               }}
             >
               Add Todo <AddIcon />
-            </Button>
-            <Button type='submit' variant='contained' color='primary'>
-              Save
             </Button>
           </CardActions>
         </form>
