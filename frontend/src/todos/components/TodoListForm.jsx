@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { TextField, Card, CardContent, CardActions, Button, Typography } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AddIcon from '@mui/icons-material/Add'
+import CheckBoxIcon from '@mui/icons-material/CheckBox'
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
 
 export const TodoListForm = ({ todoList, saveTodoList }) => {
   const [todos, setTodos] = useState(todoList.todos)
@@ -19,7 +21,7 @@ export const TodoListForm = ({ todoList, saveTodoList }) => {
           onSubmit={handleSubmit}
           style={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}
         >
-          {todos.map((name, index) => (
+          {todos.map(({ text, done }, index) => (
             <div key={index} style={{ display: 'flex', alignItems: 'center' }}>
               <Typography sx={{ margin: '8px' }} variant='h6'>
                 {index + 1}
@@ -27,25 +29,50 @@ export const TodoListForm = ({ todoList, saveTodoList }) => {
               <TextField
                 sx={{ flexGrow: 1, marginTop: '1rem' }}
                 label='What to do?'
-                value={name}
+                value={text}
                 onChange={(event) => {
+                  const newText = event.target.value
                   fetch(
                     'http://localhost:3001?' +
                       new URLSearchParams({
                         type: 'set_text',
-                        list_idx: todoList.id,
-                        todo_idx: index,
-                        text: event.target.value,
+                        list_id: todoList.id,
+                        index,
+                        text: newText,
                       })
                   )
                   setTodos([
                     // immutable update
                     ...todos.slice(0, index),
-                    event.target.value,
+                    { text: newText, done },
                     ...todos.slice(index + 1),
                   ])
                 }}
               />
+              <Button
+                sx={{ margin: '8px' }}
+                size='small'
+                color='secondary'
+                onClick={() => {
+                  fetch(
+                    'http://localhost:3001?' +
+                      new URLSearchParams({
+                        type: 'set_done',
+                        list_id: todoList.id,
+                        index,
+                        done: !done,
+                      })
+                  )
+                  setTodos([
+                    // immutable update
+                    ...todos.slice(0, index),
+                    { text, done: !done },
+                    ...todos.slice(index + 1),
+                  ])
+                }}
+              >
+                {done ? <CheckBoxIcon /> : <CheckBoxOutlineBlankIcon />}
+              </Button>
               <Button
                 sx={{ margin: '8px' }}
                 size='small'
