@@ -5,7 +5,7 @@ import AddIcon from '@mui/icons-material/Add'
 import CheckBoxIcon from '@mui/icons-material/CheckBox'
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
 
-export const TodoListForm = ({ todoList, saveTodoList }) => {
+export const TodoListForm = ({ todoList, saveTodoList, doneItemsUpdated = () => {} }) => {
   const [todos, setTodos] = useState(todoList.todos)
 
   const handleSubmit = (event) => {
@@ -63,12 +63,15 @@ export const TodoListForm = ({ todoList, saveTodoList }) => {
                         done: !done,
                       })
                   )
-                  setTodos([
-                    // immutable update
-                    ...todos.slice(0, index),
-                    { text, done: !done },
-                    ...todos.slice(index + 1),
-                  ])
+
+                  const newTodos = [...todos]
+                  // toggle it
+                  newTodos[index].done = !done
+
+                  const allDone = newTodos.every(({ done }) => done)
+
+                  doneItemsUpdated(todoList.id, allDone)
+                  setTodos(newTodos)
                 }}
               >
                 {done ? <CheckBoxIcon /> : <CheckBoxOutlineBlankIcon />}
