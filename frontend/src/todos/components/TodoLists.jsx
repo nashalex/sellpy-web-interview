@@ -68,6 +68,8 @@ export const TodoLists = ({ style }) => {
   const [activeListId, setActiveListId] = useState()
   const [todoLists, dispatchTodoLists] = useReducer(todoListReducer, {})
 
+  // Current implementation is not great, since it gets recomputed for all lists whenever anything gets updated.
+  // But the performance overhead from this is negligible unless there are lots of lists with many finished items.
   const finishedLists = useMemo(() => {
     const out = {}
     for (const listId in todoLists) {
@@ -77,6 +79,7 @@ export const TodoLists = ({ style }) => {
   }, [todoLists])
   console.log(`finishedLists: ${JSON.stringify(finishedLists)}`)
 
+  // Update the active lists from the server
   useEffect(() => {
     fetch('http://localhost:3001?type=getLists')
       .then((todoLists) => todoLists.json())
