@@ -34,6 +34,11 @@ const todoListReducer = (todoLists, action) => {
       newTodos = [...oldTodos.slice(0, index), ...oldTodos.slice(index + 1)]
       break
     }
+    case 'setDate': {
+      newTodos = [...oldTodos]
+      newTodos[index].date = action.date
+      break
+    }
     case 'setDone': {
       newTodos = [...oldTodos]
       newTodos[index].done = action.done
