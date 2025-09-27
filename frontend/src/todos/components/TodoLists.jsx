@@ -16,7 +16,7 @@ const fetchTodoLists = () => fetch('http://localhost:3001?type=get').then((todos
 
 export const TodoLists = ({ style }) => {
   const [todoLists, setTodoLists] = useState({})
-  const [activeList, setActiveList] = useState()
+  const [activeListId, setActiveListId] = useState()
   const [finishedLists, setFinishedLists] = useState({})
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export const TodoLists = ({ style }) => {
           <Typography component='h2'>My Todo Lists</Typography>
           <List>
             {Object.keys(todoLists).map((key) => (
-              <ListItemButton key={key} onClick={() => setActiveList(key)}>
+              <ListItemButton key={key} onClick={() => setActiveListId(key)}>
                 <ListItemIcon>
                   <ReceiptIcon />
                 </ListItemIcon>
@@ -45,19 +45,28 @@ export const TodoLists = ({ style }) => {
           </List>
         </CardContent>
       </Card>
-      {todoLists[activeList] && (
+      {todoLists[activeListId] && (
         <TodoListForm
-          key={activeList} // use key to make React recreate component to reset internal state
-          todoList={todoLists[activeList]}
+          key={activeListId} // use key to make React recreate component to reset internal state
+          todoList={todoLists[activeListId]}
           doneItemsUpdated={(listId, allDone) =>
             setFinishedLists({ ...finishedLists, [listId]: allDone })
           }
-          saveTodoList={(id, { todos }) => {
-            const listToUpdate = todoLists[id]
-            setTodoLists({
+          saveTodoList={({ action, todos }) => {
+            const newTodoLists = {
               ...todoLists,
-              [id]: { ...listToUpdate, todos },
-            })
+              [action.listId]: { ...todoLists[action.listId], todos },
+            }
+            setTodoLists(newTodoLists)
+            if (action.type === 'setDone') {
+              setFinishedLists(
+                Object.keys(newTodoLists).map((id) =>
+                  newTodoLists[id].todos.every(({ done }) => done)
+                )
+              )
+            }
+
+            fetch('http://localhost:3001?' + new URLSearchParams({ type: 'set', todos }))
           }}
         />
       )}

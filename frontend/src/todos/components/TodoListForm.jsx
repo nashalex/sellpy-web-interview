@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useReducer } from 'react'
 import { TextField, Card, CardContent, CardActions, Button, Typography } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AddIcon from '@mui/icons-material/Add'
@@ -6,21 +6,46 @@ import CheckBoxIcon from '@mui/icons-material/CheckBox'
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
 
 export const TodoListForm = ({ todoList, saveTodoList, doneItemsUpdated = () => {} }) => {
-  const [todos, setTodos] = useState(todoList.todos)
+  // const [todos, setTodos] = useState(todoList.todos)
 
-  const handleSubmit = (event) => {
-    event.preventDefault()
-    saveTodoList(todoList.id, { todos })
+  const todosReducer = (todos, action) => {
+    let newTodos
+    switch (action.type) {
+      case 'createTodo': {
+        newTodos = [...todos, { text: '', done: false }]
+        break
+      }
+      case 'delete': {
+        newTodos = [...todos.slice(0, action.index), ...todos.slice(action.index + 1)]
+        break
+      }
+      case 'setDone': {
+        newTodos = [...todos]
+        newTodos[action.index].done = action.done
+        const allDone = newTodos.every(({ done }) => done)
+        doneItemsUpdated(action.listId, allDone)
+        break
+      }
+      case 'setText': {
+        newTodos = [...todos]
+        newTodos[action.index].text = action.text
+        break
+      }
+
+      default:
+        throw new Error('TODO')
+    }
+    saveTodoList({ action, todos })
+    fetch('http://localhost:3001?' + new URLSearchParams(action))
+    return newTodos
   }
+  const [todos, dispatchTodos] = useReducer(todosReducer, todoList.todos)
 
   return (
     <Card sx={{ margin: '0 1rem' }}>
       <CardContent>
         <Typography component='h2'>{todoList.title}</Typography>
-        <form
-          onSubmit={handleSubmit}
-          style={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}
-        >
+        <form style={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
           {todos.map(({ text, done }, index) => (
             <div key={index} style={{ display: 'flex', alignItems: 'center' }}>
               <Typography sx={{ margin: '8px' }} variant='h6'>
@@ -31,22 +56,12 @@ export const TodoListForm = ({ todoList, saveTodoList, doneItemsUpdated = () => 
                 label='What to do?'
                 value={text}
                 onChange={(event) => {
-                  const newText = event.target.value
-                  fetch(
-                    'http://localhost:3001?' +
-                      new URLSearchParams({
-                        type: 'set_text',
-                        list_id: todoList.id,
-                        index,
-                        text: newText,
-                      })
-                  )
-                  setTodos([
-                    // immutable update
-                    ...todos.slice(0, index),
-                    { text: newText, done },
-                    ...todos.slice(index + 1),
-                  ])
+                  dispatchTodos({
+                    type: 'setText',
+                    listId: todoList.id,
+                    index,
+                    text: event.target.value,
+                  })
                 }}
               />
               <Button
@@ -54,24 +69,12 @@ export const TodoListForm = ({ todoList, saveTodoList, doneItemsUpdated = () => 
                 size='small'
                 color='secondary'
                 onClick={() => {
-                  fetch(
-                    'http://localhost:3001?' +
-                      new URLSearchParams({
-                        type: 'set_done',
-                        list_id: todoList.id,
-                        index,
-                        done: !done,
-                      })
-                  )
-
-                  const newTodos = [...todos]
-                  // toggle it
-                  newTodos[index].done = !done
-
-                  const allDone = newTodos.every(({ done }) => done)
-
-                  doneItemsUpdated(todoList.id, allDone)
-                  setTodos(newTodos)
+                  dispatchTodos({
+                    type: 'setDone',
+                    listId: todoList.id,
+                    index,
+                    done: !done,
+                  })
                 }}
               >
                 {done ? <CheckBoxIcon /> : <CheckBoxOutlineBlankIcon />}
@@ -81,11 +84,11 @@ export const TodoListForm = ({ todoList, saveTodoList, doneItemsUpdated = () => 
                 size='small'
                 color='secondary'
                 onClick={() => {
-                  setTodos([
-                    // immutable delete
-                    ...todos.slice(0, index),
-                    ...todos.slice(index + 1),
-                  ])
+                  dispatchTodos({
+                    type: 'delete',
+                    listId: todoList.id,
+                    index,
+                  })
                 }}
               >
                 <DeleteIcon />
@@ -97,7 +100,11 @@ export const TodoListForm = ({ todoList, saveTodoList, doneItemsUpdated = () => 
               type='button'
               color='primary'
               onClick={() => {
-                setTodos([...todos, ''])
+                console.log(`todos length: ${todos.length}`)
+                dispatchTodos({
+                  type: 'createTodo',
+                  listId: todoList.id,
+                })
               }}
             >
               Add Todo <AddIcon />
