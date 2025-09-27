@@ -53,18 +53,6 @@ const todoListReducer = (todoLists, action) => {
 
   const newTodoLists = { ...todoLists }
   newTodoLists[action.listId].todos = newTodos
-  fetch('http://localhost:3001', {
-    method: 'POST',
-    mode: 'cors',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      type: 'setTodos',
-      listId: action.listId,
-      todos: newTodos,
-    }),
-  })
 
   return newTodoLists
 }
@@ -74,6 +62,36 @@ export const TodoLists = ({ style }) => {
   const [activeListId, setActiveListId] = useState()
   const [todoLists, dispatchTodoLists] = useReducer(todoListReducer, {})
 
+  // Update the active lists from the server
+  useEffect(() => {
+    fetch('http://localhost:3001')
+      .then((todoLists) => todoLists.json())
+      .then((todoLists) => dispatchTodoLists({ type: 'getFromServer', todoLists }))
+  }, [])
+
+  // Send updated todos to the server
+  useEffect(() => {
+    if (!activeListId || Object.keys(todoLists).length === 0) {
+      return
+    }
+    fetch('http://localhost:3001', {
+      method: 'POST',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: 'setTodos',
+        listId: activeListId,
+        todos: todoLists[activeListId].todos,
+      }),
+    })
+    // HACK: This technically also depends on `activeListId`,
+    // but we only want to send a server request when `todoLists` changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todoLists])
+
+  // Readonly state that stores an object parallel to `todoLists` containing information about which list is done
   // Current implementation is not great, since it gets recomputed for all lists whenever anything gets updated.
   // But the performance overhead from this is negligible unless there are lots of lists with many finished items.
   const finishedLists = useMemo(() => {
@@ -84,13 +102,6 @@ export const TodoLists = ({ style }) => {
     return out
   }, [todoLists])
   console.log(`finishedLists: ${JSON.stringify(finishedLists)}`)
-
-  // Update the active lists from the server
-  useEffect(() => {
-    fetch('http://localhost:3001')
-      .then((todoLists) => todoLists.json())
-      .then((todoLists) => dispatchTodoLists({ type: 'getFromServer', todoLists }))
-  }, [])
 
   if (!Object.keys(todoLists).length) return null
   return (
