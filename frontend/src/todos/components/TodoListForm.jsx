@@ -25,19 +25,6 @@ export const TodoListForm = ({ todoList, updateTodos }) => {
               <Typography sx={{ margin: '8px' }} variant='h6'>
                 {index + 1}
               </Typography>
-              <TextField
-                sx={{ flexGrow: 1, marginTop: '1rem' }}
-                label='What to do?'
-                value={todo.text}
-                onChange={(event) => {
-                  updateTodos({
-                    type: 'setText',
-                    listId: todoList.id,
-                    index,
-                    text: event.target.value,
-                  })
-                }}
-              />
               <Button
                 sx={{ margin: '8px' }}
                 size='small'
@@ -53,6 +40,19 @@ export const TodoListForm = ({ todoList, updateTodos }) => {
               >
                 {todo.done ? <CheckBoxIcon /> : <CheckBoxOutlineBlankIcon />}
               </Button>
+              <TextField
+                sx={{ flexGrow: 1, marginTop: '1rem' }}
+                label='What to do?'
+                value={todo.text}
+                onChange={(event) => {
+                  updateTodos({
+                    type: 'setText',
+                    listId: todoList.id,
+                    index,
+                    text: event.target.value,
+                  })
+                }}
+              />
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   value={todo.date}
