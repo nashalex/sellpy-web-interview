@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect, useReducer, useMemo } from 'react'
+import React, { Fragment, useState, useEffect, useReducer } from 'react'
 import {
   Card,
   CardContent,
@@ -57,6 +57,9 @@ const todoListReducer = (todoLists, action) => {
   return newTodoLists
 }
 
+// Helper function that returns true if every todo item in a list is `done`, and false otherwise.
+const isTodoListDone = (todoList) => todoList.todos.every((todo) => todo.done)
+
 export const TodoLists = ({ style }) => {
   // const [todoLists, setTodoLists] = useState({})
   const [activeListId, setActiveListId] = useState()
@@ -91,18 +94,6 @@ export const TodoLists = ({ style }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todoLists])
 
-  // Readonly state that stores an object parallel to `todoLists` containing information about which list is done
-  // Current implementation is not great, since it gets recomputed for all lists whenever anything gets updated.
-  // But the performance overhead from this is negligible unless there are lots of lists with many finished items.
-  const finishedLists = useMemo(() => {
-    const out = {}
-    for (const listId in todoLists) {
-      out[listId] = todoLists[listId].todos.every((todo) => todo.done)
-    }
-    return out
-  }, [todoLists])
-  console.log(`finishedLists: ${JSON.stringify(finishedLists)}`)
-
   if (!Object.keys(todoLists).length) return null
   return (
     <Fragment>
@@ -116,7 +107,8 @@ export const TodoLists = ({ style }) => {
                   <ReceiptIcon />
                 </ListItemIcon>
                 <ListItemText primary={todoLists[listId].title} />
-                {finishedLists[listId] && <CheckIcon />}
+                {/* Render a check icon if all items in this list are done */}
+                {isTodoListDone(todoLists[listId]) && <CheckIcon />}
               </ListItemButton>
             ))}
           </List>
