@@ -21,12 +21,11 @@ export const TodoListForm = ({ todoList, updateTodos }) => {
         <Typography component='h2'>{todoList.title}</Typography>
         <form style={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
           {todoList.todos.map((todo, index) => (
-            <div key={index} style={{ display: 'flex', alignItems: 'center' }}>
+            <div key={index} style={{ display: 'flex', alignItems: 'center', marginTop: '1rem' }}>
               <Typography sx={{ margin: '8px' }} variant='h6'>
                 {index + 1}
               </Typography>
               <Button
-                sx={{ margin: '8px' }}
                 size='small'
                 color='secondary'
                 onClick={() => {
@@ -41,7 +40,7 @@ export const TodoListForm = ({ todoList, updateTodos }) => {
                 {todo.done ? <CheckBoxIcon /> : <CheckBoxOutlineBlankIcon />}
               </Button>
               <TextField
-                sx={{ flexGrow: 1, marginTop: '1rem' }}
+                sx={{ flexGrow: 1 }}
                 label='What to do?'
                 value={todo.text}
                 onChange={(event) => {
@@ -76,9 +75,7 @@ export const TodoListForm = ({ todoList, updateTodos }) => {
                   renderInput={(params) => <TextField {...params} />}
                 />
               </LocalizationProvider>
-
               <Button
-                sx={{ margin: '8px' }}
                 size='small'
                 color='secondary'
                 onClick={() => {
