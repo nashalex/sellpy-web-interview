@@ -23,13 +23,16 @@ const PORT = 3001
 app.get('/', (req, res) => {
   console.log(req.query)
   switch (req.query.type) {
-    case 'get': {
+    case 'getLists': {
       res.send(todoLists)
       break
     }
-    case 'set': {
+    case 'setTodos': {
       const { listId, todos } = req.query
-      todoLists[listId] = todos
+
+      todoLists[listId].todos = JSON.parse(todos)
+      // console.log(`setting todos to ${todos}`)
+      // console.log(`set todos to ${JSON.stringify(todoLists[listId].todos)}`)
       break
     }
     default:
