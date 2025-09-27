@@ -1,7 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 
-let todoLists = {
+const todoLists = {
   '0000000001': {
     id: '0000000001',
     title: 'First List',
