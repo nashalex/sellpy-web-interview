@@ -12,6 +12,7 @@ import CheckIcon from '@mui/icons-material/Check'
 import ReceiptIcon from '@mui/icons-material/Receipt'
 import { TodoListForm } from './TodoListForm'
 
+// The reducer that handles all update logic related to `todoLists`.
 const todoListReducer = (todoLists, action) => {
   /// handle the special case of receiving all todos from the server
   if (action.type === 'getFromServer') {
@@ -22,33 +23,39 @@ const todoListReducer = (todoLists, action) => {
   const index = action.index
   let newTodos
 
+  // It is a bit redundant for every `action.type` to have `Todo` in the name, but
+  // this was done for (theoretical) forwards-compatibility reasons.
+  // The reasoning is that this reducer is responsible for updating the entire
+  // `todoLists` object, and in the future it might (theoretically) be desirable to add `action.type`s
+  // not related to the `todos` field.
+  // (e.g. creating a TodoList via a 'createList' action)
   switch (action.type) {
     case 'createTodo': {
       newTodos = [...oldTodos, { text: '', done: false }]
       break
     }
-    case 'delete': {
+    case 'deleteTodo': {
       newTodos = [...oldTodos.slice(0, index), ...oldTodos.slice(index + 1)]
       break
     }
-    case 'setDate': {
+    case 'setTodoDate': {
       newTodos = [...oldTodos]
       newTodos[index].date = action.date
       break
     }
-    case 'setDone': {
+    case 'setTodoDone': {
       newTodos = [...oldTodos]
       newTodos[index].done = action.done
       break
     }
-    case 'setText': {
+    case 'setTodoText': {
       newTodos = [...oldTodos]
       newTodos[index].text = action.text
       break
     }
 
     default:
-      throw new Error('TODO')
+      throw new Error(`Invalid action.type given to todoListReducer: ${action.type}`)
   }
 
   const newTodoLists = { ...todoLists }
@@ -61,8 +68,8 @@ const todoListReducer = (todoLists, action) => {
 const isTodoListDone = (todoList) => todoList.todos.every((todo) => todo.done)
 
 export const TodoLists = ({ style }) => {
-  // const [todoLists, setTodoLists] = useState({})
   const [activeListId, setActiveListId] = useState()
+  // Using a reducer makes it easier to remove state related logic from the `TodoListForm` component.
   const [todoLists, dispatchTodoLists] = useReducer(todoListReducer, {})
 
   // Update the active lists from the server
@@ -72,8 +79,11 @@ export const TodoLists = ({ style }) => {
       .then((todoLists) => dispatchTodoLists({ type: 'getFromServer', todoLists }))
   }, [])
 
-  // Send updated todos to the server
+  // Send updated todo's to the server.
+  // Note: This only updates `todoLists[activeListId]`, in order to cut down on the size of the HTTP requests.
+  // (Because only the active list can be updated anyways.)
   useEffect(() => {
+    // Only send the todos if we have todos to send, and we have an active list.
     if (!activeListId || Object.keys(todoLists).length === 0) {
       return
     }
@@ -89,10 +99,10 @@ export const TodoLists = ({ style }) => {
         todos: todoLists[activeListId].todos,
       }),
     })
-    // HACK: This technically also depends on `activeListId`,
-    // but we only want to send a server request when `todoLists` changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [todoLists])
+    // TODO: This is also sending an update request whenever the `activeListId` changes, which is probably unnecessary.
+    // Maybe a better solution exists, but this seems fine for now.
+    // Revisit later if necessary.
+  }, [activeListId, todoLists])
 
   if (!Object.keys(todoLists).length) return null
   return (

@@ -28,7 +28,7 @@ export const TodoListForm = ({ todoList, updateTodos }) => {
                 color='secondary'
                 onClick={() => {
                   updateTodos({
-                    type: 'setDone',
+                    type: 'setTodoDone',
                     listId: todoList.id,
                     index,
                     done: !todo.done,
@@ -43,7 +43,7 @@ export const TodoListForm = ({ todoList, updateTodos }) => {
                 value={todo.text}
                 onChange={(event) => {
                   updateTodos({
-                    type: 'setText',
+                    type: 'setTodoText',
                     listId: todoList.id,
                     index,
                     text: event.target.value,
@@ -64,7 +64,7 @@ export const TodoListForm = ({ todoList, updateTodos }) => {
                   })()}
                   onChange={(date) => {
                     updateTodos({
-                      type: 'setDate',
+                      type: 'setTodoDate',
                       listId: todoList.id,
                       index,
                       date,
@@ -78,7 +78,7 @@ export const TodoListForm = ({ todoList, updateTodos }) => {
                 color='secondary'
                 onClick={() => {
                   updateTodos({
-                    type: 'delete',
+                    type: 'deleteTodo',
                     listId: todoList.id,
                     index,
                   })
