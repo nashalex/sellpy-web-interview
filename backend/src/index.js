@@ -20,25 +20,17 @@ app.use(cors())
 app.use(express.json())
 
 const PORT = 3001
-app.get('/', (req, res) => {
-  console.log(req.query)
-  switch (req.query.type) {
-    case 'getLists': {
-      res.send(todoLists)
-      break
-    }
-    case 'setTodos': {
-      const { listId, todos } = req.query
-
-      todoLists[listId].todos = JSON.parse(todos)
-      // console.log(`setting todos to ${todos}`)
-      // console.log(`set todos to ${JSON.stringify(todoLists[listId].todos)}`)
-      break
-    }
-    default:
-      console.log(`ERROR: Unsupported request type: ${req.params.type}`)
-  }
-  return
+app.get('/', (_req, res) => {
+  res.send(todoLists)
 })
 
+app.post('/', (req, res) => {
+  const body = req.body
+  if (body.type === 'setTodos') {
+    console.log(`Setting todos to ${JSON.stringify(body.todos)}`)
+    todoLists[body.listId].todos = body.todos
+  }
+
+  res.send()
+})
 app.listen(PORT, () => console.log(`Example app listening on port ${PORT}!`))

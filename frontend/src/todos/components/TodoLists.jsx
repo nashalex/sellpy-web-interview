@@ -13,16 +13,13 @@ import ReceiptIcon from '@mui/icons-material/Receipt'
 import { TodoListForm } from './TodoListForm'
 
 const todoListReducer = (todoLists, action) => {
-  /// special case
+  /// handle the special case of receiving all todos from the server
   if (action.type === 'getFromServer') {
-    console.log(`got todolists from server: ${JSON.stringify(action.todoLists)}`)
     return action.todoLists
   }
 
   const oldTodos = todoLists[action.listId].todos
   const index = action.index
-  console.log(`action: ${JSON.stringify(action)}`)
-  console.log(`oldTodos: ${JSON.stringify(oldTodos)}`)
   let newTodos
 
   switch (action.type) {
@@ -53,18 +50,22 @@ const todoListReducer = (todoLists, action) => {
     default:
       throw new Error('TODO')
   }
+
   const newTodoLists = { ...todoLists }
   newTodoLists[action.listId].todos = newTodos
-  console.log(`updated todolists to ${newTodoLists}`)
-  console.log('-------------------DONE UPDATING------------------\n')
-  fetch(
-    'http://localhost:3001?' +
-      new URLSearchParams({
-        type: 'setTodos',
-        listId: action.listId,
-        todos: JSON.stringify(newTodos),
-      })
-  )
+  fetch('http://localhost:3001', {
+    method: 'POST',
+    mode: 'cors',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      type: 'setTodos',
+      listId: action.listId,
+      todos: newTodos,
+    }),
+  })
+
   return newTodoLists
 }
 
@@ -86,7 +87,7 @@ export const TodoLists = ({ style }) => {
 
   // Update the active lists from the server
   useEffect(() => {
-    fetch('http://localhost:3001?type=getLists')
+    fetch('http://localhost:3001')
       .then((todoLists) => todoLists.json())
       .then((todoLists) => dispatchTodoLists({ type: 'getFromServer', todoLists }))
   }, [])
