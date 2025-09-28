@@ -27,7 +27,6 @@ app.get('/', (_req, res) => {
 app.post('/', (req, res) => {
   const body = req.body
   if (body.type === 'setTodos') {
-    console.log(`Setting todoLists['${body.listId}'].todos = ${JSON.stringify(body.todos)}`)
     todoLists[body.listId].todos = body.todos
   }
 

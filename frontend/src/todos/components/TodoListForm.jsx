@@ -75,10 +75,6 @@ export const TodoListForm = ({ todoList, updateTodos }) => {
                       return 'Date'
                     }
                     const now = daysjs()
-                    console.log(`date = ${todo.date}`)
-                    console.log(`daysjs(date) = ${daysjs(todo.date)}`)
-                    console.log(`now.to(date) = ${now.to(todo.date, true)}`)
-                    console.log(`now.from(date) = ${now.from(todo.date, true)}`)
                     if (now.day() === daysjs(todo.date).day()) {
                       return 'Date (due today)'
                     }
