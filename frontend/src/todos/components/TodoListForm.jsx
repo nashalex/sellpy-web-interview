@@ -10,8 +10,24 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 
-daysjs.extend(relativeTime)
-
+daysjs.extend(relativeTime, {
+  // Make daysjs use strict thresholds
+  // This is needed because, by default, daysjs switches to days after 22 hours, and months after 26 days
+  // copied from https://day.js.org/docs/en/customization/relative-time
+  thresholds: [
+    { l: 's', r: 1 },
+    { l: 'm', r: 1 },
+    { l: 'mm', r: 59, d: 'minute' },
+    { l: 'h', r: 1 },
+    { l: 'hh', r: 23, d: 'hour' },
+    { l: 'd', r: 1 },
+    { l: 'dd', r: 29, d: 'day' },
+    { l: 'M', r: 1 },
+    { l: 'MM', r: 11, d: 'month' },
+    { l: 'y', r: 1 },
+    { l: 'yy', d: 'year' },
+  ],
+})
 export const TodoListForm = ({ todoList, updateTodos }) => {
   return (
     <Card sx={{ margin: '0 1rem' }}>
@@ -52,15 +68,21 @@ export const TodoListForm = ({ todoList, updateTodos }) => {
               />
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
-                  value={todo.date}
+                  value={todo.date || null}
                   // Using IIFE because this is just display formatting logic
                   label={(() => {
+                    if (!todo.date) {
+                      return 'Date'
+                    }
                     const now = daysjs()
-                    const date = todo.date ?? now
-                    if (now.day === daysjs(date).day) {
+                    console.log(`date = ${todo.date}`)
+                    console.log(`daysjs(date) = ${daysjs(todo.date)}`)
+                    console.log(`now.to(date) = ${now.to(todo.date, true)}`)
+                    console.log(`now.from(date) = ${now.from(todo.date, true)}`)
+                    if (now.day() === daysjs(todo.date).day()) {
                       return 'Date (due today)'
                     }
-                    return `Date (due ${daysjs().to(date)})`
+                    return `Date (due ${now.to(todo.date)})`
                   })()}
                   onChange={(date) => {
                     updateTodos({
