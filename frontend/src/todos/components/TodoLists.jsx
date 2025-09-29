@@ -19,8 +19,13 @@ import { TodoListForm } from './TodoListForm'
 const SERVER_URL = 'http://localhost:3001'
 
 const nextTodoListId = (todoLists) => {
-  const max = Math.max(Object.keys(todoLists))
-  return String(max + 1).padStart(10, '0')
+  const keys = Object.keys(todoLists)
+  let maxId = 0
+  if (keys.length > 0) {
+    maxId = Math.max(...keys)
+  }
+  console.log(`keys = ${JSON.stringify(keys)}. maxId = ${maxId}`)
+  return String(maxId + 1).padStart(10, '0')
 }
 
 // The reducer that handles all update logic related to `todoLists`.
@@ -106,7 +111,15 @@ export const TodoLists = ({ style }) => {
   useEffect(() => {
     fetch(SERVER_URL)
       .then((serializedTodoLists) => serializedTodoLists.json())
-      .then((todoLists) => dispatchTodoLists({ type: 'getFromServer', todoLists }))
+      .then((todoLists) => {
+        // If the server is empty, make a new todo list.
+        // Otherwise, update the todoLists to reflect the values stored in the server.
+        if (Object.keys(todoLists).length === 0) {
+          dispatchTodoLists({ type: 'createTodoList' })
+        } else {
+          dispatchTodoLists({ type: 'getFromServer', todoLists })
+        }
+      })
   }, [])
 
   {
