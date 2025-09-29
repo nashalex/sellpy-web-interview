@@ -6,9 +6,9 @@ import {
   CardActions,
   List,
   ListItemButton,
-  ListItemText,
   ListItemIcon,
   Typography,
+  TextField,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -167,7 +167,19 @@ export const TodoLists = ({ style }) => {
                 <ListItemIcon sx={{ minWidth: '35px' }}>
                   {isTodoListDone(todoLists[listId]) && <CheckIcon />}
                 </ListItemIcon>
-                <ListItemText primary={todoLists[listId].title || 'Untitled'} />
+                <TextField
+                  sx={{ flexGrow: 1 }}
+                  label='Title'
+                  value={todoLists[listId].title}
+                  onChange={(event) => {
+                    dispatchTodoLists({
+                      type: 'setTodoListTitle',
+                      listId,
+                      title: event.target.value,
+                    })
+                  }}
+                />
+                <Button
                   size='small'
                   color='secondary'
                   onClick={() => {

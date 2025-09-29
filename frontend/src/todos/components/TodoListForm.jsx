@@ -62,7 +62,6 @@ export const TodoListForm = ({ todoList, dispatchTodoLists }) => {
   return (
     <Card sx={{ margin: '0 1rem' }}>
       <CardContent>
-        {/* <Typography component='h2'>{todoList.title}</Typography> */}
         <TextField
           sx={{ flexGrow: 1 }}
           label='Title'
