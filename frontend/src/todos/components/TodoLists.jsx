@@ -11,11 +11,17 @@ import {
   Typography,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import DeleteIcon from '@mui/icons-material/Delete'
 import CheckIcon from '@mui/icons-material/Check'
 import ReceiptIcon from '@mui/icons-material/Receipt'
 import { TodoListForm } from './TodoListForm'
 
 const SERVER_URL = 'http://localhost:3001'
+
+const nextTodoListId = (todoLists) => {
+  const max = Math.max(Object.keys(todoLists))
+  return String(max + 1).padStart(10, '0')
+}
 
 // The reducer that handles all update logic related to `todoLists`.
 const todoListReducer = (todoLists, action) => {
@@ -32,8 +38,7 @@ const todoListReducer = (todoLists, action) => {
     // TodoList related updates
     // These return early.
     case 'createTodoList': {
-      const length = Object.keys(todoLists).length
-      const id = String(length + 1).padStart(10, '0')
+      const id = nextTodoListId(todoLists)
       const newList = {
         id,
         title: '',
@@ -45,6 +50,11 @@ const todoListReducer = (todoLists, action) => {
       const { title, listId } = action
       const oldList = todoLists[listId]
       return { ...todoLists, [listId]: { ...oldList, title } }
+    }
+    case 'deleteTodoList': {
+      const newLists = { ...todoLists }
+      delete newLists[action.listId]
+      return newLists
     }
 
     // Todo related updated
@@ -99,27 +109,34 @@ export const TodoLists = ({ style }) => {
       .then((todoLists) => dispatchTodoLists({ type: 'getFromServer', todoLists }))
   }, [])
 
-  // Send updated todo's to the server.
-  // Note: This only updates `todoLists[activeListId]`, in order to cut down on the size of the HTTP requests.
-  useEffect(() => {
-    // Only send the todos if we have todos to send, and we have an active list.
-    if (!activeListId || !Object.keys(todoLists).length) {
-      return
-    }
-    fetch(SERVER_URL, {
-      method: 'POST',
-      mode: 'cors',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        type: 'setTodoLists',
-        todoLists: todoLists,
-      }),
-    })
-    // NOTE: This is also sending an update request whenever the `activeListId` changes, which is probably unnecessary.
-    // Maybe a better solution exists, but this seems fine for now. Revisit later if necessary.
-  }, [activeListId, todoLists])
+  {
+    const postTimer = useRef()
+    useEffect(() => {
+      // Only send the todos if we have todos to send, and we have an active list.
+      if (!activeListId || Object.keys(todoLists).length === 0) {
+        return
+      }
+      if (postTimer.current) {
+        clearTimeout(postTimer.current)
+      }
+      postTimer.current = setTimeout(() => {
+        fetch(SERVER_URL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'setTodoLists',
+            todoLists: todoLists,
+          }),
+        })
+      }, 150)
+
+      // NOTE: This is also sending an update request whenever the `activeListId` changes, which is probably unnecessary.
+      // Maybe a better solution exists, but this seems fine for now. Revisit later if necessary.
+    }, [activeListId, todoLists])
+  }
 
   if (!Object.keys(todoLists).length) return null
   return (
@@ -137,7 +154,21 @@ export const TodoLists = ({ style }) => {
                 <ListItemIcon sx={{ minWidth: '35px' }}>
                   {isTodoListDone(todoLists[listId]) && <CheckIcon />}
                 </ListItemIcon>
-                <ListItemText primary={todoLists[listId].title} />
+                <ListItemText primary={todoLists[listId].title || 'Untitled'} />
+                  size='small'
+                  color='secondary'
+                  onClick={() => {
+                    dispatchTodoLists({
+                      type: 'deleteTodoList',
+                      listId,
+                    })
+                    if (listId === activeListId) {
+                      setActiveListId(null)
+                    }
+                  }}
+                >
+                  <DeleteIcon />
+                </Button>
               </ListItemButton>
             ))}
           </List>
@@ -149,6 +180,7 @@ export const TodoLists = ({ style }) => {
                 dispatchTodoLists({
                   type: 'createTodoList',
                 })
+                setActiveListId(nextTodoListId(todoLists))
               }}
             >
               Add List <AddIcon />
