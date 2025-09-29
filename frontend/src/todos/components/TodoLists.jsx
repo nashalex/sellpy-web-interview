@@ -91,7 +91,7 @@ export const TodoLists = ({ style }) => {
     // Queue update requests whenever a Todolist is modified.
     useEffect(() => {
       // No lists or no active list? Bail.
-      if (Object.keys(todoLists).length === 0 || !activeListId) {
+      if (!Object.keys(todoLists).length || !activeListId) {
         return
       }
       const timers = requestTimers.current
