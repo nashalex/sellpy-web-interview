@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect, useReducer } from 'react'
+import React, { Fragment, useState, useEffect, useReducer, useRef } from 'react'
 import {
   Card,
   CardContent,
@@ -65,6 +65,25 @@ const isTodoListDone = (todoList) => {
   return todoList.todos.every((todo) => todo.done)
 }
 
+const sendPostRequest = (todoLists, listId) => {
+  console.log('Sending update to server')
+  fetch(SERVER_URL, {
+    method: 'POST',
+    mode: 'cors',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      type: 'setTodos',
+      listId,
+      todos: todoLists[listId].todos,
+    }),
+  })
+}
+// Minimum amount of time that must pass between 'POST' requests, so that we can implement
+// autosave functionality without spamming the server each time a new letter is added to a note.
+const POST_TIMEOUT_DURATION = 150
+
 export const TodoLists = ({ style }) => {
   const [activeListId, setActiveListId] = useState()
   // Using a reducer makes it easier to remove state related logic from the `TodoListForm` component.
@@ -77,28 +96,34 @@ export const TodoLists = ({ style }) => {
       .then((todoLists) => dispatchTodoLists({ type: 'getFromServer', todoLists }))
   }, [])
 
-  // Send updated todo's to the server.
-  // Note: This only updates `todoLists[activeListId]`, in order to cut down on the size of the HTTP requests.
-  useEffect(() => {
-    // Only send the todos if we have todos to send, and we have an active list.
-    if (!activeListId || !Object.keys(todoLists).length) {
-      return
-    }
-    fetch(SERVER_URL, {
-      method: 'POST',
-      mode: 'cors',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        type: 'setTodos',
+  // Send updated Todo's to the server.
+  // We are using a timer to ensure we don't spam the server with a new request each time a key gets pressed.
+  // i.e., we wait until 200ms have passed with no changes before sending an update to the server
+  {
+    let serverStoreTimeOut = useRef(null)
+    useEffect(() => {
+      // Only send the todos if we have todos to send, and we have an active list.
+      if (Object.keys(todoLists).length === 0) {
+        return
+      }
+      if (serverStoreTimeOut.current) {
+        const { timer, listId } = serverStoreTimeOut.current
+        serverStoreTimeOut.current = null
+        clearTimeout(timer)
+
+        if (listId !== activeListId) {
+          sendPostRequest(todoLists, listId)
+        }
+      }
+      if (!activeListId) {
+        return
+      }
+      serverStoreTimeOut.current = {
+        timer: setTimeout(() => sendPostRequest(todoLists, activeListId), POST_TIMEOUT_DURATION),
         listId: activeListId,
-        todos: todoLists[activeListId].todos,
-      }),
-    })
-    // NOTE: This is also sending an update request whenever the `activeListId` changes, which is probably unnecessary.
-    // Maybe a better solution exists, but this seems fine for now. Revisit later if necessary.
-  }, [activeListId, todoLists])
+      }
+    }, [activeListId, todoLists])
+  }
 
   if (!Object.keys(todoLists).length) return null
   return (
