@@ -12,9 +12,11 @@ import CheckIcon from '@mui/icons-material/Check'
 import ReceiptIcon from '@mui/icons-material/Receipt'
 import { TodoListForm } from './TodoListForm'
 
+const SERVER_URL = 'http://localhost:3001'
+
 // The reducer that handles all update logic related to `todoLists`.
 const todoListReducer = (todoLists, action) => {
-  /// handle the special case of receiving all todos from the server
+  /// Handle the special case of receiving all todo lists from the server.
   if (action.type === 'getFromServer') {
     return action.todoLists
   }
@@ -23,12 +25,6 @@ const todoListReducer = (todoLists, action) => {
   const index = action.index
   let newTodos
 
-  // It is a bit redundant for every `action.type` to have `Todo` in the name, but
-  // this was done for (theoretical) forwards-compatibility reasons.
-  // The reasoning is that this reducer is responsible for updating the entire
-  // `todoLists` object, and in the future it might (theoretically) be desirable to add `action.type`s
-  // not related to the `todos` field.
-  // (e.g. creating a TodoList via a 'createList' action)
   switch (action.type) {
     case 'createTodo': {
       newTodos = [...oldTodos, { text: '', done: false }]
@@ -64,8 +60,10 @@ const todoListReducer = (todoLists, action) => {
   return newTodoLists
 }
 
-// Helper function that returns true if every todo item in a list is `done`, and false otherwise.
-const isTodoListDone = (todoList) => todoList.todos.every((todo) => todo.done)
+// Returns true if every todo item in a list is `done`, and false otherwise.
+const isTodoListDone = (todoList) => {
+  return todoList.todos.every((todo) => todo.done)
+}
 
 export const TodoLists = ({ style }) => {
   const [activeListId, setActiveListId] = useState()
@@ -74,20 +72,19 @@ export const TodoLists = ({ style }) => {
 
   // Update the active lists from the server
   useEffect(() => {
-    fetch('http://localhost:3001')
-      .then((todoLists) => todoLists.json())
+    fetch(SERVER_URL)
+      .then((serializedTodoLists) => serializedTodoLists.json())
       .then((todoLists) => dispatchTodoLists({ type: 'getFromServer', todoLists }))
   }, [])
 
   // Send updated todo's to the server.
   // Note: This only updates `todoLists[activeListId]`, in order to cut down on the size of the HTTP requests.
-  // (Because only the active list can be updated anyways.)
   useEffect(() => {
     // Only send the todos if we have todos to send, and we have an active list.
-    if (!activeListId || Object.keys(todoLists).length === 0) {
+    if (!activeListId || !Object.keys(todoLists).length) {
       return
     }
-    fetch('http://localhost:3001', {
+    fetch(SERVER_URL, {
       method: 'POST',
       mode: 'cors',
       headers: {
@@ -99,9 +96,8 @@ export const TodoLists = ({ style }) => {
         todos: todoLists[activeListId].todos,
       }),
     })
-    // TODO: This is also sending an update request whenever the `activeListId` changes, which is probably unnecessary.
-    // Maybe a better solution exists, but this seems fine for now.
-    // Revisit later if necessary.
+    // NOTE: This is also sending an update request whenever the `activeListId` changes, which is probably unnecessary.
+    // Maybe a better solution exists, but this seems fine for now. Revisit later if necessary.
   }, [activeListId, todoLists])
 
   if (!Object.keys(todoLists).length) return null
@@ -128,7 +124,7 @@ export const TodoLists = ({ style }) => {
         <TodoListForm
           key={activeListId} // use key to make React recreate component to reset internal state
           todoList={todoLists[activeListId]}
-          updateTodos={dispatchTodoLists}
+          dispatchTodoLists={dispatchTodoLists}
         />
       )}
     </Fragment>

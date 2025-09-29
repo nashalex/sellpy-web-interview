@@ -28,7 +28,7 @@ daysjs.extend(relativeTime, {
     { l: 'yy', d: 'year' },
   ],
 })
-export const TodoListForm = ({ todoList, updateTodos }) => {
+export const TodoListForm = ({ todoList, dispatchTodoLists }) => {
   return (
     <Card sx={{ margin: '0 1rem' }}>
       <CardContent>
@@ -43,7 +43,7 @@ export const TodoListForm = ({ todoList, updateTodos }) => {
                 size='small'
                 color='secondary'
                 onClick={() => {
-                  updateTodos({
+                  dispatchTodoLists({
                     type: 'setTodoDone',
                     listId: todoList.id,
                     index,
@@ -58,7 +58,7 @@ export const TodoListForm = ({ todoList, updateTodos }) => {
                 label='What to do?'
                 value={todo.text}
                 onChange={(event) => {
-                  updateTodos({
+                  dispatchTodoLists({
                     type: 'setTodoText',
                     listId: todoList.id,
                     index,
@@ -81,7 +81,7 @@ export const TodoListForm = ({ todoList, updateTodos }) => {
                     return `Date (due ${now.to(todo.date)})`
                   })()}
                   onChange={(date) => {
-                    updateTodos({
+                    dispatchTodoLists({
                       type: 'setTodoDate',
                       listId: todoList.id,
                       index,
@@ -92,10 +92,11 @@ export const TodoListForm = ({ todoList, updateTodos }) => {
                 />
               </LocalizationProvider>
               <Button
+                sx={{ margin: '8px' }}
                 size='small'
                 color='secondary'
                 onClick={() => {
-                  updateTodos({
+                  dispatchTodoLists({
                     type: 'deleteTodo',
                     listId: todoList.id,
                     index,
@@ -111,7 +112,7 @@ export const TodoListForm = ({ todoList, updateTodos }) => {
               type='button'
               color='primary'
               onClick={() => {
-                updateTodos({
+                dispatchTodoLists({
                   type: 'createTodo',
                   listId: todoList.id,
                 })
