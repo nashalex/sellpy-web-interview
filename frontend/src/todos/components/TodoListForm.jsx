@@ -62,7 +62,19 @@ export const TodoListForm = ({ todoList, dispatchTodoLists }) => {
   return (
     <Card sx={{ margin: '0 1rem' }}>
       <CardContent>
-        <Typography component='h2'>{todoList.title}</Typography>
+        {/* <Typography component='h2'>{todoList.title}</Typography> */}
+        <TextField
+          sx={{ flexGrow: 1 }}
+          label='Title'
+          value={todoList.title}
+          onChange={(event) => {
+            dispatchTodoLists({
+              type: 'setTodoListTitle',
+              listId: todoList.id,
+              title: event.target.value,
+            })
+          }}
+        />
         <form style={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
           {todoList.todos.map((todo, index) => (
             <div

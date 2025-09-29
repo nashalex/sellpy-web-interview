@@ -1,13 +1,16 @@
 import React, { Fragment, useState, useEffect, useReducer, useRef } from 'react'
 import {
+  Button,
   Card,
   CardContent,
+  CardActions,
   List,
   ListItemButton,
   ListItemText,
   ListItemIcon,
   Typography,
 } from '@mui/material'
+import AddIcon from '@mui/icons-material/Add'
 import CheckIcon from '@mui/icons-material/Check'
 import ReceiptIcon from '@mui/icons-material/Receipt'
 import { TodoListForm } from './TodoListForm'
@@ -21,11 +24,31 @@ const todoListReducer = (todoLists, action) => {
     return action.todoLists
   }
 
-  const oldTodos = todoLists[action.listId].todos
+  const oldTodos = todoLists[action.listId]?.todos
   const index = action.index
   let newTodos
 
   switch (action.type) {
+    // TodoList related updates
+    // These return early.
+    case 'createTodoList': {
+      const length = Object.keys(todoLists).length
+      const id = String(length + 1).padStart(10, '0')
+      const newList = {
+        id,
+        title: '',
+        todos: [{ text: '', done: false }],
+      }
+      return { ...todoLists, [id]: newList }
+    }
+    case 'setTodoListTitle': {
+      const { title, listId } = action
+      const oldList = todoLists[listId]
+      return { ...todoLists, [listId]: { ...oldList, title } }
+    }
+
+    // Todo related updated
+    // These set `newTodos` and `break`
     case 'createTodo': {
       newTodos = [...oldTodos, { text: '', done: false }]
       break
@@ -76,44 +99,27 @@ export const TodoLists = ({ style }) => {
       .then((todoLists) => dispatchTodoLists({ type: 'getFromServer', todoLists }))
   }, [])
 
-  // Send updated Todo's to the server.
-  {
-    // Minimum amount of time that must pass between 'POST' requests, so that we can implement
-    // autosave functionality without spamming the server each time a new letter is added to a note.
-    const POST_TIMEOUT_DURATION = 150
-
-    // Stores a timer for each listId. When the timer expires, a POST request gets sent to the backend.
-    // Each timer lasts `POST_TIMEOUT_DURATION` milliseconds, and will restart if another update occurs within that time.
-    let requestTimers = useRef({})
-
-    // Queue update requests whenever a Todolist is modified.
-    useEffect(() => {
-      // No lists or no active list? Bail.
-      if (!Object.keys(todoLists).length || !activeListId) {
-        return
-      }
-      const timers = requestTimers.current
-      // Make it explicit that the callback should use the value of `activeListId` for the current frame
-      const listId = activeListId
-
-      clearTimeout(timers[listId])
-      // Start the timer for the current `listId`
-      timers[listId] = setTimeout(() => {
-        fetch(SERVER_URL, {
-          method: 'POST',
-          keepalive: true,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            type: 'setTodos',
-            listId,
-            todos: todoLists[listId].todos,
-          }),
-        })
-      }, POST_TIMEOUT_DURATION)
-    }, [activeListId, todoLists])
-  }
+  // Send updated todo's to the server.
+  // Note: This only updates `todoLists[activeListId]`, in order to cut down on the size of the HTTP requests.
+  useEffect(() => {
+    // Only send the todos if we have todos to send, and we have an active list.
+    if (!activeListId || !Object.keys(todoLists).length) {
+      return
+    }
+    fetch(SERVER_URL, {
+      method: 'POST',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: 'setTodoLists',
+        todoLists: todoLists,
+      }),
+    })
+    // NOTE: This is also sending an update request whenever the `activeListId` changes, which is probably unnecessary.
+    // Maybe a better solution exists, but this seems fine for now. Revisit later if necessary.
+  }, [activeListId, todoLists])
 
   if (!Object.keys(todoLists).length) return null
   return (
@@ -135,6 +141,19 @@ export const TodoLists = ({ style }) => {
               </ListItemButton>
             ))}
           </List>
+          <CardActions>
+            <Button
+              type='button'
+              color='primary'
+              onClick={() => {
+                dispatchTodoLists({
+                  type: 'createTodoList',
+                })
+              }}
+            >
+              Add List <AddIcon />
+            </Button>
+          </CardActions>
         </CardContent>
       </Card>
       {todoLists[activeListId] && (
