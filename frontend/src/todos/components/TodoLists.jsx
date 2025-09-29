@@ -65,25 +65,6 @@ const isTodoListDone = (todoList) => {
   return todoList.todos.every((todo) => todo.done)
 }
 
-const sendPostRequest = (todoLists, listId) => {
-  console.log('Sending update to server')
-  fetch(SERVER_URL, {
-    method: 'POST',
-    mode: 'cors',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      type: 'setTodos',
-      listId,
-      todos: todoLists[listId].todos,
-    }),
-  })
-}
-// Minimum amount of time that must pass between 'POST' requests, so that we can implement
-// autosave functionality without spamming the server each time a new letter is added to a note.
-const POST_TIMEOUT_DURATION = 150
-
 export const TodoLists = ({ style }) => {
   const [activeListId, setActiveListId] = useState()
   // Using a reducer makes it easier to remove state related logic from the `TodoListForm` component.
@@ -97,31 +78,47 @@ export const TodoLists = ({ style }) => {
   }, [])
 
   // Send updated Todo's to the server.
-  // We are using a timer to ensure we don't spam the server with a new request each time a key gets pressed.
-  // i.e., we wait until 200ms have passed with no changes before sending an update to the server
   {
-    let serverStoreTimeOut = useRef(null)
-    useEffect(() => {
-      // Only send the todos if we have todos to send, and we have an active list.
-      if (Object.keys(todoLists).length === 0) {
-        return
-      }
-      if (serverStoreTimeOut.current) {
-        const { timer, listId } = serverStoreTimeOut.current
-        serverStoreTimeOut.current = null
-        clearTimeout(timer)
+    // Minimum amount of time that must pass between 'POST' requests, so that we can implement
+    // autosave functionality without spamming the server each time a new letter is added to a note.
+    const POST_TIMEOUT_DURATION = 100
 
-        if (listId !== activeListId) {
-          sendPostRequest(todoLists, listId)
-        }
-      }
-      if (!activeListId) {
+    // Stores a timer for each listId. When the timer expires, a post request gets sent to the backend.
+    // Each timer lasts `POST_TIMEOUT_DURATION` milliseconds, and will restart if another update request gets made within that time.
+    // This is so that we can implement autosave functionality without spamming the backend.
+    let requestTimers = useRef({})
+
+    // Queue update requests whenever a Todolist is modified.
+    useEffect(() => {
+      // No lists or no active list? Bail.
+      if (Object.keys(todoLists).length === 0 || !activeListId) {
         return
       }
-      serverStoreTimeOut.current = {
-        timer: setTimeout(() => sendPostRequest(todoLists, activeListId), POST_TIMEOUT_DURATION),
-        listId: activeListId,
+      const timers = requestTimers.current
+      // Make it explicit that the callback should use the value of `activeListId` for the current frame
+      const listId = activeListId
+
+      // If we edited the same `listId` within `POST_TIMEOUT_DURATION` milliseconds, cancel the corresponding timer.
+      if (timers[listId]) {
+        clearTimeout(timers[listId])
+        timers[listId] = null
       }
+      // Start the timer for the current `listId`
+      timers[listId] = setTimeout(() => {
+        fetch(SERVER_URL, {
+          method: 'POST',
+          mode: 'cors',
+          keepalive: true,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'setTodos',
+            listId,
+            todos: todoLists[listId].todos,
+          }),
+        })
+      }, POST_TIMEOUT_DURATION)
     }, [activeListId, todoLists])
   }
 
