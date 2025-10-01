@@ -1,7 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 
-const todoLists = {
+let todoLists = {
   '0000000001': {
     id: '0000000001',
     title: 'First List',
@@ -26,8 +26,10 @@ app.get('/', (_req, res) => {
 
 app.post('/', (req, res) => {
   const body = req.body
-  if (body.type === 'setTodos') {
-    todoLists[body.listId].todos = body.todos
+  if (body.type === 'setTodoLists') {
+    todoLists = body.todoLists
+    console.debug(`TodoLists.length =  ${JSON.stringify(todoLists).length}`)
+    console.debug(`todos.length = ${JSON.stringify(todoLists[body.listId].todos).length}`)
   }
 
   res.send()

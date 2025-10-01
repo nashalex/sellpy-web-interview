@@ -83,23 +83,18 @@ export const TodoLists = ({ style }) => {
     // autosave functionality without spamming the server each time a new letter is added to a note.
     const POST_TIMEOUT_DURATION = 150
 
-    // Stores a timer for each listId. When the timer expires, a post request gets sent to the backend.
-    // Each timer lasts `POST_TIMEOUT_DURATION` milliseconds, and will restart if another update request gets made within that time.
-    let requestTimers = useRef({})
+    // Stores a timer that sends an update to the backend when completed.
+    // If we edit the todoLists before the timer completes, we restart it.
+    let requestTimer = useRef()
 
     // Queue update requests whenever a Todolist is modified.
     useEffect(() => {
-      // No lists or no active list? Bail.
-      if (!Object.keys(todoLists).length || !activeListId) {
+      if (!Object.keys(todoLists).length) {
         return
       }
-      const timers = requestTimers.current
-      // Make it explicit that the callback should use the value of `activeListId` for the current frame
-      const listId = activeListId
-
-      clearTimeout(timers[listId])
+      clearTimeout(requestTimer.current)
       // Start the timer for the current `listId`
-      timers[listId] = setTimeout(() => {
+      requestTimer.current = setTimeout(() => {
         fetch(SERVER_URL, {
           method: 'POST',
           keepalive: true,
@@ -107,13 +102,14 @@ export const TodoLists = ({ style }) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            type: 'setTodos',
-            listId,
-            todos: todoLists[listId].todos,
+            type: 'setTodoLists',
+            listId: activeListId,
+            todoLists,
           }),
         })
       }, POST_TIMEOUT_DURATION)
-    }, [activeListId, todoLists])
+      // Temporarily passing activeListId for debugging purposes on the backend.
+    }, [todoLists])
   }
 
   if (!Object.keys(todoLists).length) return null
