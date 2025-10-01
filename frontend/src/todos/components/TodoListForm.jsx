@@ -28,6 +28,7 @@ daysjs.extend(relativeTime, {
     { l: 'yy', d: 'year' },
   ],
 })
+
 export const TodoListForm = ({ todoList, dispatchTodoLists }) => {
   return (
     <Card sx={{ margin: '0 1rem' }}>
@@ -68,6 +69,9 @@ export const TodoListForm = ({ todoList, dispatchTodoLists }) => {
               />
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
+                  // Use `null` instead of an empty string.
+                  // This makes the behavior of an empty Datepicker consistent
+                  // with the behavior of an empty TextField
                   value={todo.date || null}
                   // Using IIFE because this is just display formatting logic
                   label={(() => {
