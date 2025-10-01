@@ -1,6 +1,7 @@
 import React from 'react'
 import { TextField, Card, CardContent, CardActions, Button, Typography } from '@mui/material'
-import daysjs from 'dayjs'
+import dayjs from 'dayjs'
+import isToday from 'dayjs/plugin/isToday'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AddIcon from '@mui/icons-material/Add'
@@ -10,7 +11,8 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 
-daysjs.extend(relativeTime, {
+dayjs.extend(isToday)
+dayjs.extend(relativeTime, {
   // Make daysjs use strict thresholds
   // This is needed because, by default, daysjs switches to days after 22 hours, and months after 26 days
   // copied from https://day.js.org/docs/en/customization/relative-time
@@ -78,11 +80,11 @@ export const TodoListForm = ({ todoList, dispatchTodoLists }) => {
                     if (!todo.date) {
                       return 'Date'
                     }
-                    const now = daysjs()
-                    if (now.day() === daysjs(todo.date).day()) {
+                    const date = dayjs(todo.date)
+                    if (date.isToday()) {
                       return 'Date (due today)'
                     }
-                    return `Date (due ${now.to(todo.date)})`
+                    return `Date (due ${dayjs().to(date)})`
                   })()}
                   onChange={(date) => {
                     dispatchTodoLists({
