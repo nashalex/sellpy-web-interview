@@ -114,7 +114,7 @@ export const TodoLists = ({ style }) => {
       .then((todoLists) => {
         // If the server is empty, make a new todo list.
         // Otherwise, update the todoLists to reflect the values stored in the server.
-        if (Object.keys(todoLists).length === 0) {
+        if (!Object.keys(todoLists).length) {
           dispatchTodoLists({ type: 'createTodoList' })
         } else {
           dispatchTodoLists({ type: 'getFromServer', todoLists })
@@ -123,19 +123,17 @@ export const TodoLists = ({ style }) => {
   }, [])
 
   {
+    const POST_TIMER_DURATION = 150
     const postTimer = useRef()
     useEffect(() => {
-      // Only send the todos if we have todos to send, and we have an active list.
-      if (!activeListId || Object.keys(todoLists).length === 0) {
+      // Only send the todos if we have todos to send
+      if (!Object.keys(todoLists).length) {
         return
       }
-      if (postTimer.current) {
-        clearTimeout(postTimer.current)
-      }
+      clearTimeout(postTimer.current)
       postTimer.current = setTimeout(() => {
         fetch(SERVER_URL, {
           method: 'POST',
-          mode: 'cors',
           headers: {
             'Content-Type': 'application/json',
           },
@@ -144,11 +142,8 @@ export const TodoLists = ({ style }) => {
             todoLists: todoLists,
           }),
         })
-      }, 150)
-
-      // NOTE: This is also sending an update request whenever the `activeListId` changes, which is probably unnecessary.
-      // Maybe a better solution exists, but this seems fine for now. Revisit later if necessary.
-    }, [activeListId, todoLists])
+      }, POST_TIMER_DURATION)
+    }, [todoLists])
   }
 
   if (!Object.keys(todoLists).length) return null
