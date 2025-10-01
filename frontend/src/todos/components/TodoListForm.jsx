@@ -31,6 +31,14 @@ dayjs.extend(relativeTime, {
   ],
 })
 
+// Returns `true` if a `todo` is not done and it has a due date
+// that was some time before today.
+const isOverdue = (todo) => {
+  if (!todo.date || todo.done) return false
+  const date = dayjs(todo.date)
+  return !date.isToday() && date.isBefore(dayjs())
+}
+
 export const TodoListForm = ({ todoList, dispatchTodoLists }) => {
   return (
     <Card sx={{ margin: '0 1rem' }}>
@@ -38,7 +46,19 @@ export const TodoListForm = ({ todoList, dispatchTodoLists }) => {
         <Typography component='h2'>{todoList.title}</Typography>
         <form style={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
           {todoList.todos.map((todo, index) => (
-            <div key={index} style={{ display: 'flex', alignItems: 'center', marginTop: '1rem' }}>
+            <div
+              key={index}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                marginTop: '2px',
+                paddingTop: '8px',
+                paddingBottom: '8px',
+                marginBottom: '2px',
+                borderRadius: '5px',
+                backgroundColor: isOverdue(todo) && 'rgba(184, 36, 36, 0.23)',
+              }}
+            >
               <Typography sx={{ margin: '8px' }} variant='h6'>
                 {index + 1}
               </Typography>
