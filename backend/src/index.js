@@ -32,4 +32,4 @@ app.post('/', (req, res) => {
 
   res.send()
 })
-app.listen(PORT, () => console.log(`Example app listening on port ${PORT}!`))
+app.listen(PORT, () => console.log(`Listening on port ${PORT}.`))

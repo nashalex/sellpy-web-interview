@@ -81,11 +81,10 @@ export const TodoLists = ({ style }) => {
   {
     // Minimum amount of time that must pass between 'POST' requests, so that we can implement
     // autosave functionality without spamming the server each time a new letter is added to a note.
-    const POST_TIMEOUT_DURATION = 100
+    const POST_TIMEOUT_DURATION = 150
 
     // Stores a timer for each listId. When the timer expires, a post request gets sent to the backend.
     // Each timer lasts `POST_TIMEOUT_DURATION` milliseconds, and will restart if another update request gets made within that time.
-    // This is so that we can implement autosave functionality without spamming the backend.
     let requestTimers = useRef({})
 
     // Queue update requests whenever a Todolist is modified.
@@ -98,16 +97,11 @@ export const TodoLists = ({ style }) => {
       // Make it explicit that the callback should use the value of `activeListId` for the current frame
       const listId = activeListId
 
-      // If we edited the same `listId` within `POST_TIMEOUT_DURATION` milliseconds, cancel the corresponding timer.
-      if (timers[listId]) {
-        clearTimeout(timers[listId])
-        timers[listId] = null
-      }
+      clearTimeout(timers[listId])
       // Start the timer for the current `listId`
       timers[listId] = setTimeout(() => {
         fetch(SERVER_URL, {
           method: 'POST',
-          mode: 'cors',
           keepalive: true,
           headers: {
             'Content-Type': 'application/json',
