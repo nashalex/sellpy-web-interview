@@ -125,12 +125,14 @@ export const TodoLists = ({ style }) => {
           <List>
             {Object.keys(todoLists).map((listId) => (
               <ListItemButton key={listId} onClick={() => setActiveListId(listId)}>
-                <ListItemIcon>
+                <ListItemIcon sx={{ minWidth: '35px' }}>
                   <ReceiptIcon />
                 </ListItemIcon>
+                {/* Show a check icon if all items in this list are done. */}
+                <ListItemIcon sx={{ minWidth: '35px' }}>
+                  {isTodoListDone(todoLists[listId]) && <CheckIcon />}
+                </ListItemIcon>
                 <ListItemText primary={todoLists[listId].title} />
-                {/* Render a check icon if all items in this list are done */}
-                {isTodoListDone(todoLists[listId]) && <CheckIcon />}
               </ListItemButton>
             ))}
           </List>
