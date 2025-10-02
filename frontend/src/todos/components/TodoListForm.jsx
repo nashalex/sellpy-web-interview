@@ -13,8 +13,8 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 
 dayjs.extend(isToday)
 dayjs.extend(relativeTime, {
-  // Make daysjs use strict thresholds
-  // This is needed because, by default, daysjs switches to days after 22 hours, and months after 26 days
+  // Make dayjs use strict thresholds
+  // This is needed because, by default, dayjs switches to days after 22 hours, and months after 26 days
   // copied from https://day.js.org/docs/en/customization/relative-time
   thresholds: [
     { l: 's', r: 1 },
@@ -34,7 +34,9 @@ dayjs.extend(relativeTime, {
 // Returns `true` if a `todo` is not done and it has a due date
 // that was some time before today.
 const isOverdue = (todo) => {
-  if (!todo.date || todo.done) return false
+  if (!todo.date || todo.done) {
+    return false
+  }
   const date = dayjs(todo.date)
   return !date.isToday() && date.isBefore(dayjs())
 }
@@ -92,10 +94,10 @@ export const TodoListForm = ({ todoList, dispatchTodoLists }) => {
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   // Use `null` instead of an empty string.
-                  // This makes the behavior of an empty Datepicker consistent
-                  // with the behavior of an empty TextField
+                  // This makes the behavior of an empty `DatePicker` consistent
+                  // with the behavior of an empty `TextField`
                   value={todo.date || null}
-                  // Using IIFE because this is just display formatting logic
+                  // Using IIFE because this is just display formatting logic.
                   label={(() => {
                     if (!todo.date) {
                       return 'Date'
