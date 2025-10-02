@@ -16,7 +16,7 @@ const SERVER_URL = 'http://localhost:3001'
 
 // The reducer that handles all update logic related to `todoLists`.
 const todoListReducer = (todoLists, action) => {
-  /// Handle the special case of receiving all todo lists from the server.
+  // Handle the special case of receiving all todo lists from the server.
   if (action.type === 'getFromServer') {
     return action.todoLists
   }
@@ -67,7 +67,6 @@ const isTodoListDone = (todoList) => {
 
 export const TodoLists = ({ style }) => {
   const [activeListId, setActiveListId] = useState()
-  // Using a reducer makes it easier to remove state related logic from the `TodoListForm` component.
   const [todoLists, dispatchTodoLists] = useReducer(todoListReducer, {})
 
   // Update the active lists from the server
@@ -83,8 +82,8 @@ export const TodoLists = ({ style }) => {
     // autosave functionality without spamming the server each time a new letter is added to a note.
     const POST_TIMEOUT_DURATION = 150
 
-    // Stores a timer for each listId. When the timer expires, a post request gets sent to the backend.
-    // Each timer lasts `POST_TIMEOUT_DURATION` milliseconds, and will restart if another update request gets made within that time.
+    // Stores a timer for each listId. When the timer expires, a POST request gets sent to the backend.
+    // Each timer lasts `POST_TIMEOUT_DURATION` milliseconds, and will restart if another update occurs within that time.
     let requestTimers = useRef({})
 
     // Queue update requests whenever a Todolist is modified.
