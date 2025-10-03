@@ -31,6 +31,23 @@ dayjs.extend(relativeTime, {
   ],
 })
 
+const MILLISECONDS_IN_A_DAY = 24 * 60 * 60 * 1000
+
+// Gets the `date` portion of a `dateTime`. e.g., the month, day, and year, with time of day set to midnight.
+// If the first argument is `null || undefined`, the current day is used instead.
+const getDate = (dateTime) => {
+  // Delete the "time of day" part of the dateTime.
+  // This works because `valueOf` returns the time in milliseconds since midnight of a special day.
+  // So, `now % MILLISECONDS_IN_A_DAY` refers to the portion of `now` that stores the relative time of day.
+  // Thus, `now - (now % MILLISECONDS_IN_A_DAY)` is equal to `now` with the time set to midnight.
+  // The variable `r` is named after the `r` in the Division Algorithm, i.e. the remainder.
+
+  let now = dayjs(dateTime).valueOf()
+  const r = now % MILLISECONDS_IN_A_DAY
+  now -= r
+  return dayjs(now)
+}
+
 // Returns `true` if a `todo` is not done and it has a due date
 // that was some time before today.
 const isOverdue = (todo) => {
@@ -38,7 +55,7 @@ const isOverdue = (todo) => {
     return false
   }
   const date = dayjs(todo.date)
-  return !date.isToday() && date.isBefore(dayjs())
+  return !date.isToday() && date.isBefore(getDate())
 }
 
 export const TodoListForm = ({ todoList, dispatchTodoLists }) => {
@@ -106,14 +123,14 @@ export const TodoListForm = ({ todoList, dispatchTodoLists }) => {
                     if (date.isToday()) {
                       return 'Date (due today)'
                     }
-                    return `Date (due ${dayjs().to(date)})`
+                    return `Date (due ${getDate().to(date)})`
                   })()}
                   onChange={(date) => {
                     dispatchTodoLists({
                       type: 'setTodoDate',
                       listId: todoList.id,
                       index,
-                      date,
+                      date: getDate(date),
                     })
                   }}
                   renderInput={(params) => <TextField {...params} />}
